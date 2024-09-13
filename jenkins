@@ -17,17 +17,29 @@ pipeline {
            }
         }
         stage('Test') {
-           steps{
+           steps {
                bat 'mvn test'
-           }    
-            post {
-                success {
-                    // Publish JUnit test results
-                    junit '**/target/surefire-reports/TEST-*.xml'
-                    // Generate JaCoCo code coverage report
-                    jacoco(execPattern: '**/target/jacoco.exec')
-                }
-            }
+           }
+        }
+    }
+
+    post {
+        always {
+            // Always try to archive results even if the build fails
+            archiveArtifacts artifacts: '**/target/*.jar', allowEmptyArchive: true
+        }
+
+        success {
+            // Publish JUnit test results
+            junit '**/target/surefire-reports/*.xml'
+
+            // Generate JaCoCo code coverage report
+            jacoco(execPattern: '**/target/jacoco.exec', classPattern: '**/target/classes', sourcePattern: '**/src/main/java')
+        }
+        
+        cleanup {
+            // Clean up workspace if needed
+            cleanWs()
         }
     }
 }
